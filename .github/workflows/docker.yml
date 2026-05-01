@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ci-cd-itlandschap
 
     permissions:
       contents: read
@@ -17,8 +19,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Debug image name
-        run: echo "Owner = ${{ github.repository_owner }}"
+      - name: Prepare lowercase image tag
+        run: |
+          OWNER_LC="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "IMAGE=ghcr.io/${OWNER_LC}/${IMAGE_NAME}:latest" >> "$GITHUB_ENV"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -28,7 +32,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/ci-cd-itlandschap:latest .
+        run: docker build -t "$IMAGE" .
 
       - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/ci-cd-itlandschap:latest
+        run: docker push "$IMAGE"
